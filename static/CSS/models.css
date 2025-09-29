@@ -1,0 +1,272 @@
+
+/* General Body & Container */
+body {
+    font-family: 'Inter', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f7f9; /* Light background for the overall page */
+    color: #333;
+}
+
+.page-header {
+    background-color: #34495e; /* Dark blue header */
+    color: white;
+    padding: 20px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.page-header h1 {
+    margin: 0;
+    font-size: 1.8rem;
+}
+
+/* Action Button (e.g., Deploy New Version) */
+.action-btn {
+    background-color: #007bff; /* Primary blue */
+    color: white;
+    padding: 10px 18px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px; /* Space between icon and text if using */
+}
+
+.action-btn:hover {
+    background-color: #0056b3;
+}
+
+/* Main Layout */
+.models-container {
+    display: flex;
+    padding: 20px;
+    gap: 30px; /* More space between sections */
+}
+
+.model-overview-section {
+    flex: 3; /* Takes more space for tables */
+    background-color: white;
+    padding: 25px;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+.metrics-panel {
+    flex: 1; /* Sidebar for metrics */
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.model-overview-section h2 {
+    color: #34495e;
+    margin-top: 0;
+    margin-bottom: 20px;
+    font-size: 1.5rem;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+}
+
+/* Data Tables */
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 30px;
+}
+
+.data-table th, .data-table td {
+    padding: 12px 15px;
+    border: 1px solid #e0e0e0;
+    text-align: left;
+    font-size: 0.95rem;
+}
+
+.data-table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+    color: #555;
+}
+
+.data-table tbody tr:nth-child(even) {
+    background-color: #fefefe;
+}
+
+.data-table tbody tr:hover {
+    background-color: #f0f0f0;
+}
+
+/* Status Badges/Pills */
+.status-badge {
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: white;
+    display: inline-block;
+}
+
+.status-online { background-color: #28a745; } /* Green */
+.status-deploying { background-color: #ffc107; color: #333; } /* Yellow */
+.status-offline { background-color: #dc3545; } /* Red */
+.status-retired { background-color: #6c757d; } /* Grey */
+.status-rollback { background-color: #17a2b8; } /* Cyan */
+
+
+/* Table Action Buttons */
+.small-btn {
+    padding: 6px 12px;
+    margin-right: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: #f0f0f0;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: background-color 0.2s, border-color 0.2s;
+}
+
+.small-btn:hover {
+    background-color: #e0e0e0;
+    border-color: #bbb;
+}
+
+/* Specific button styles */
+.view-logs { background-color: #17a2b8; color: white; border-color: #138496; }
+.view-logs:hover { background-color: #138496; }
+.redeploy-btn { background-color: #007bff; color: white; border-color: #0056b3; }
+.redeploy-btn:hover { background-color: #0056b3; }
+.rollback-btn { background-color: #ffc107; color: #333; border-color: #e0a800; }
+.rollback-btn:hover { background-color: #e0a800; }
+
+
+/* Metrics Panel Cards */
+.metric-card {
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.metric-card h3 {
+    margin-top: 0;
+    color: #555;
+    font-size: 1.1rem;
+    margin-bottom: 15px;
+}
+
+.metric-card p {
+    font-size: 2.5rem; /* Larger for key metrics */
+    font-weight: 700;
+    color: #007bff; /* Primary blue for values */
+    margin: 0 0 10px 0;
+}
+
+.metric-card .health-message {
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.metric-card p.score-high { color: #28a745; } /* Green for high score */
+.metric-card p.score-medium { color: #ffc107; } /* Yellow for medium */
+.metric-card p.score-low { color: #dc3545; } /* Red for low */
+
+.chart-card {
+    height: 300px; /* Fixed height for charts */
+    display: flex;
+    flex-direction: column;
+}
+
+.chart-card canvas {
+    flex-grow: 1; /* Allow canvas to fill available space */
+    max-height: 250px; /* Prevent it from expanding infinitely */
+}
+
+
+/* Modal Styling */
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed;
+    z-index: 1000; /* High z-index to be on top */
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.6); /* Darker overlay */
+    justify-content: center;
+    align-items: center;
+}
+
+.modal.visible {
+    display: flex; /* Show when visible */
+}
+
+.modal-content {
+    background-color: #fefefe;
+    padding: 30px;
+    border: 1px solid #888;
+    border-radius: 10px;
+    width: 90%;
+    max-width: 600px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    position: relative;
+}
+
+.close-btn {
+    color: #aaa;
+    position: absolute;
+    top: 15px;
+    right: 25px;
+    font-size: 30px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.close-btn:hover,
+.close-btn:focus {
+    color: #333;
+    text-decoration: none;
+}
+
+#deployment-form label {
+    display: block;
+    margin-top: 15px;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #555;
+}
+
+#deployment-form input[type="text"],
+#deployment-form input[type="file"],
+#deployment-form textarea {
+    width: calc(100% - 20px); /* Adjust for padding */
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-sizing: border-box; /* Include padding in width */
+    font-size: 1rem;
+}
+
+#deployment-form input[readonly] {
+    background-color: #e9ecef;
+    cursor: not-allowed;
+}
+
+.deploy-submit-btn {
+    width: 100%;
+    margin-top: 20px;
+    padding: 12px;
+    font-size: 1.1rem;
+    background-color: #28a745; /* Green for deployment */
+}
+
+.deploy-submit-btn:hover {
+    background-color: #218838;
+}
