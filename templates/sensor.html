@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GeoVigil - Sensors Management</title>
+    
+    <link rel="stylesheet" href="{{ url_for('static', filename='CSS/sensor.css') }}">
+</head>
+<body>
+
+    <header class="page-header">
+        <h1>Sensors Management</h1>
+        <button id="add-sensor-btn" class="action-btn">
+            <i class="bx bx-plus-circle"></i> Add New Sensor
+        </button>
+    </header>
+
+    <main class="sensor-container">
+        <section class="sensor-overview">
+            <h2>Active Sensors (3)</h2>
+            <div id="sensor-list">
+                </div>
+        </section>
+
+        <aside id="sensor-details" class="details-panel hidden">
+            <h2>Sensor Details</h2>
+            <div id="detail-content">
+                <p>Select a sensor from the list to view its real-time data and configuration.</p>
+            </div>
+        </aside>
+
+        <div id="sensor-modal" class="modal hidden">
+            <div class="modal-content">
+                <span class="close-btn">&times;</span>
+                <h3>Add/Edit Sensor</h3>
+                <form id="sensor-form">
+                    <label for="sensor-id">Sensor ID:</label>
+                    <input type="text" id="sensor-id" name="sensorId" required>
+                    
+                    <label for="location">Location:</label>
+                    <input type="text" id="location" name="location" required>
+                    
+                    <label for="status">Status:</label>
+                    <select id="status" name="status">
+                        <option value="Active">Active</option>
+                        <option value="Inactive">Inactive</option>
+                        <option value="Maintenance">Maintenance</option>
+                    </select>
+
+                    <button type="submit" class="action-btn save-btn">Save Sensor</button>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <script src="{{ url_for('static', filename='JS/sensor.js') }}"></script>
+</body>
+</html>

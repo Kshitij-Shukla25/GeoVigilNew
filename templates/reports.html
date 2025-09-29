@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GeoVigil - Reports</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='CSS/reports.css') }}">
+</head>
+<body>
+
+    <header class="page-header">
+        <h1>Reports Section</h1>
+        <button id="generate-report-btn" class="action-btn">
+            <i class="bx bx-file-plus"></i> Generate New Report
+        </button>
+    </header>
+
+    <main class="reports-container">
+        
+        <section class="report-list-section">
+            <h2>Generated Reports History</h2>
+            <div id="report-list">
+                <div class="report-item" data-report-id="RPT-001">
+                    <h3>Weekly Summary (Oct 16 - 22)</h3>
+                    <p>Status: Completed | Date: 2025-10-23</p>
+                    <div class="report-actions">
+                        <a href="#" class="action-link download-link">Download PDF</a>
+                        <a href="#" class="action-link view-link">View Details</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <aside class="filters-panel">
+            <h2>Filter Reports</h2>
+            <form id="report-filter-form">
+                <label for="report-type">Report Type:</label>
+                <select id="report-type" name="reportType">
+                    <option value="all">All Types</option>
+                    <option value="daily">Daily</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="anomaly">Anomaly</option>
+                </select>
+
+                <label for="date-range">Date Range:</label>
+                <input type="date" id="start-date" name="startDate">
+                <input type="date" id="end-date" name="endDate">
+                
+                <button type="submit" class="action-btn filter-btn">Apply Filters</button>
+            </form>
+        </aside>
+    </main>
+
+    <script src="{{ url_for('static', filename='JS/reports.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GeoVigil - Worker Approval</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='CSS/worker_approval.css') }}">
+</head>
+<body>
+    <header class="page-header">
+        <h1>Pending Worker Approvals</h1>
+        <p>Review and manage new worker registrations.</p>
+    </header>
+
+    <main class="approval-container">
+        
+        <section class="pending-list">
+            <h2>New Registration Requests (<span id="pending-count">2</span>)</h2>
+            <div id="approval-items">
+                <div class="worker-card" data-worker-id="WID-105">
+                    <div class="worker-info">
+                        <h3>John Doe</h3>
+                        <p>Worker ID: WID-105 | Role: Field Operator</p>
+                        <p>Requested On: 2025-09-28</p>
+                    </div>
+                    <div class="worker-actions">
+                        <button class="action-btn approve-btn" data-action="approve">Approve</button>
+                        <button class="action-btn reject-btn" data-action="reject">Reject</button>
+                    </div>
+                </div>
+
+                <div class="worker-card" data-worker-id="WID-106">
+                    <div class="worker-info">
+                        <h3>Jane Smith</h3>
+                        <p>Worker ID: WID-106 | Role: Data Analyst</p>
+                        <p>Requested On: 2025-09-29</p>
+                    </div>
+                    <div class="worker-actions">
+                        <button class="action-btn approve-btn" data-action="approve">Approve</button>
+                        <button class="action-btn reject-btn" data-action="reject">Reject</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <aside class="history-panel">
+            <h2>Quick Stats</h2>
+            <p>Total Pending: <span id="stat-pending">2</span></p>
+            <p>Total Workers: 15</p>
+        </aside>
+    </main>
+
+    <script src="{{ url_for('static', filename='JS/worker_approval.js') }}"></script>
+</body>
+</html>

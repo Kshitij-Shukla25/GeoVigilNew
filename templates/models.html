@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GeoVigil - ML Model Management</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='CSS/models.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+    <header class="page-header">
+        <h1>ML Model Management</h1>
+        <button id="deploy-new-model-btn" class="action-btn">
+            <i class="bx bx-cloud-upload"></i> Deploy New Version
+        </button>
+    </header>
+
+    <main class="models-container">
+        
+        <section class="model-overview-section">
+            <h2>Active Model Deployments</h2>
+            <table class="data-table model-active-table">
+                <thead>
+                    <tr>
+                        <th>Model Name</th>
+                        <th>Version</th>
+                        <th>Status</th>
+                        <th>Accuracy</th>
+                        <th>Latency (ms)</th>
+                        <th>Last Deployed</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="active-models-body">
+                    </tbody>
+            </table>
+
+            <h2 style="margin-top: 40px;">Deployment History</h2>
+            <table class="data-table model-history-table">
+                <thead>
+                    <tr>
+                        <th>Model Name</th>
+                        <th>Version</th>
+                        <th>Status</th>
+                        <th>Accuracy</th>
+                        <th>Latency (ms)</th>
+                        <th>Deployed On</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="history-models-body">
+                    </tbody>
+            </table>
+        </section>
+
+        <aside class="metrics-panel">
+            <h2>Performance Metrics</h2>
+            
+            <div class="metric-card">
+                <h3>Current Health Score</h3>
+                <p id="model-health-score" class="score-high">95 / 100</p>
+                <span class="health-message">All systems optimal.</span>
+            </div>
+
+            <div class="metric-card">
+                <h3>Total API Requests (24h)</h3>
+                <p id="total-requests">45,123</p>
+            </div>
+            
+            <div class="metric-card chart-card">
+                <h3>Latency Trend (Last 7 days)</h3>
+                <canvas id="latencyTrendChart"></canvas>
+            </div>
+
+            <div class="metric-card chart-card">
+                <h3>Accuracy Trend (Last 7 days)</h3>
+                <canvas id="accuracyTrendChart"></canvas>
+            </div>
+
+        </aside>
+    </main>
+
+    <div id="deployment-modal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close-btn">&times;</span>
+            <h3>Deploy New Model Version</h3>
+            <form id="deployment-form">
+                <label for="model-name">Model Name:</label>
+                <input type="text" id="model-name" name="modelName" value="Rockfall Predictor" readonly>
+                
+                <label for="new-version">New Version Tag:</label>
+                <input type="text" id="new-version" name="newVersion" placeholder="e.g., v3.2, experimental-A" required>
+                
+                <label for="model-file">Model File (.pkl, .h5, etc.):</label>
+                <input type="file" id="model-file" name="modelFile" accept=".pkl,.h5,.onnx" required>
+                
+                <label for="deployment-notes">Deployment Notes:</label>
+                <textarea id="deployment-notes" name="deploymentNotes" rows="3" placeholder="Describe changes or improvements"></textarea>
+
+                <button type="submit" class="action-btn deploy-submit-btn">Start Deployment</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='JS/models.js') }}"></script>
+</body>
+</html>
