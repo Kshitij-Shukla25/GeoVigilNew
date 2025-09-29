@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GeoVigil Rockfall Risk Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+    
+    <link href='https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.css' rel='stylesheet' />
+    <script src='https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.js'></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        /* Note: For a real app, move these inline styles to dashboard.css */
+        
+        /* General Alerts/Grid Items */
+        .card-alert {
+            grid-column: 1 / -1; 
+            padding: 15px 30px;
+            text-align: center;
+            font-weight: 700;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.2rem;
+        }
+        .alert-red { background-color: #ff4d4d; color: white; border: 2px solid #e60000; }
+        .alert-yellow { background-color: #ffc400; color: #333; border: 2px solid #e0b400; } 
+        .alert-green { background-color: #4CAF50; color: white; border: 2px solid #388e3c; }
+        .alert-icon { margin-right: 15px; font-size: 1.5em; }
+
+        /* --- UI/UX CHANGES (A.1) --- */
+        @keyframes pulse-red {
+            0% { box-shadow: 0 0 0 0 rgba(255, 77, 77, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(255, 77, 77, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 77, 77, 0); }
+        }
+        .system-alert-banner {
+            background-color: #ff4d4d; 
+            color: white; 
+            padding: 10px; 
+            text-align: center;
+            animation: pulse-red 2s infinite;
+            grid-column: 1 / -1;
+            margin-bottom: 20px;
+        }
+        
+        .card.error-state {
+            border: 3px solid #e60000;
+            box-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
+        }
+        .card.lagging-state {
+            border: 3px solid #ffc400;
+            box-shadow: 0 0 8px rgba(255, 196, 0, 0.5);
+        }
+        
+        .feed-actions {
+            margin-top: 10px;
+            text-align: center;
+        }
+        .feed-actions button {
+            background: #444;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            margin: 0 2px;
+        }
+        .feed-actions button:hover {
+            background: #555;
+        }
+
+        /* --- USER MENU STYLES (Kept for completeness) --- */
+        .user-menu-container {
+            position: relative;
+            z-index: 1000; 
+        }
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #007bff; 
+            background-image: url('/static/admin.png'); 
+            background-size: cover;
+            background-position: center;
+            cursor: pointer;
+            border: 2px solid #fff;
+            transition: box-shadow 0.2s;
+            margin-left: 15px;
+        }
+        .user-dropdown-menu {
+            position: absolute;
+            top: 50px; 
+            right: 0;
+            width: 250px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+        }
+        .user-dropdown-menu.hidden {
+            display: none;
+        }
+        .profile-info {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        .profile-photo {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            margin-right: 10px;
+            background-color: #ccc;
+        }
+        .profile-text h4 {
+            margin: 0;
+            font-size: 1rem;
+            color: #333;
+        }
+        .profile-text p {
+            margin: 0;
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+        .dropdown-item {
+            display: block;
+            padding: 10px 15px;
+            text-decoration: none;
+            color: #333;
+            font-size: 0.95rem;
+        }
+        .dropdown-item:hover {
+            background-color: #f8f9fa;
+        }
+        .dropdown-divider {
+            height: 1px;
+            background-color: #eee;
+            margin: 5px 0;
+        }
+        /* NEW CHART STYLES for Seismic Data */
+        .card-seismic-charts {
+            display: flex;
+            flex-direction: column; 
+            gap: 15px; 
+            padding-bottom: 0; 
+        }
+        .card-seismic-charts .chart-container {
+            flex-grow: 1; 
+            background-color: #f8f9fa; 
+            border-radius: 5px;
+            padding: 10px;
+        }
+        /* --- END GENERAL STYLES --- */
+        
+        
+        /* --- FINAL ROBUST LAYOUT FIXES --- */
+        
+        /* 1. Simplify main grid placement for the two side-by-side cards */
+        .card-live-sensor {
+            /* Set a definitive height that accommodates the 2x3 grid + header */
+            min-height: 380px; 
+            height: 100%;
+            grid-column: span 2; /* Take 2 columns */
+        }
+        .card-seismic {
+            /* Set a definitive height to match the sensor card */
+            min-height: 380px; 
+            height: 100%;
+            grid-column: span 2; /* Take 2 columns to maintain 4-column layout */
+        }
+        
+        /* 2. Enforce inner 2x3 grid structure for sensors */
+        .sensor-grid {
+            display: grid;
+            /* FIX: Use flex-grow: 1 on parent content to consume remaining height */
+            height: 100%; 
+            padding: 20px; /* Ensure content is inside padding */
+            
+            /* Enforce columns and rows */
+            grid-template-columns: repeat(3, 1fr); 
+            grid-template-rows: repeat(2, 1fr);
+            gap: 10px;
+        }
+        
+        /* 3. Fix sensor item stretching/overflow */
+        .sensor-item {
+            display: flex; 
+            flex-direction: column;
+            /* FIX: Use space-between for vertical alignment: title top, unit bottom */
+            justify-content: space-between; 
+            align-items: flex-start; 
+            padding: 15px;
+            height: 100%; /* Must be 100% to fill the grid cell */
+            overflow: hidden; 
+            text-align: left;
+        }
+        
+        .sensor-item .sensor-title {
+            margin-bottom: 0; /* Let flex control spacing */
+            margin-top: 0;
+        }
+        .sensor-item .sensor-value {
+            /* The main visual element should be centered */
+            font-size: 2.5rem;
+            font-weight: 700;
+            line-height: 1.1;
+            flex-grow: 1; /* Allow the value to take up the most vertical space */
+            display: flex;
+            align-items: center;
+        }
+        .sensor-item .sensor-unit {
+            margin-top: 0;
+            font-size: 0.8rem;
+        }
+    </style>
+</head>
+<body>
+    
+    <div class="dashboard-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <img src="{{ url_for('static', filename='logo.png') }}" alt="GeoVigil Logo" class="logo">
+                <span class="app-name">GeoVigil</span>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <ul class="nav-menu">
+                    <li class="nav-item active">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                        <a href="{{ url_for('dashboard') }}">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>
+                        <a href="{{ url_for('sensors') }}">Sensors</a>
+                    </li>
+                    <li class="nav-item">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                        <a href="{{ url_for('reports') }}">Reports</a>
+                    </li>
+                    
+                    <li class="nav-item">
+                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                        <a href="{{ url_for('worker_approval') }}">Workers Approval</a>
+                    </li>
+                </ul>
+                
+                </nav>
+            
+            <div class="sidebar-section">
+                <div class="nav-item">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l-.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                    Settings
+                </div>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="main-header">
+                <nav class="main-tabs">
+                    <a href="{{ url_for('dashboard') }}" class="tab-item active">Dashboard</a>
+                    <a href="{{ url_for('sensors') }}" class="tab-item">Sensors</a>
+                    <a href="{{ url_for('reports') }}" class="tab-item">Reports</a>
+                    <a href="{{ url_for('worker_approval') }}" class="tab-item">Worker Approval</a>
+                   
+                </nav>
+                <div class="header-actions">
+                    <input type="search" placeholder="Search..." class="search-input">
+                    <button class="icon-button">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 01-3.46 0"></path></svg>
+                    </button>
+                    
+                    <div class="user-menu-container">
+                        <div class="user-avatar" id="user-avatar-btn"></div>
+                        <div class="user-dropdown-menu hidden" id="user-dropdown">
+                            <div class="profile-info">
+                                <img src="{{ url_for('static', filename='admin.png') }}" alt="Admin Photo" class="profile-photo">
+                                <div class="profile-text">
+                                    <h4>Shweta Singh (Admin)</h4>
+                                    <p>shwetasingh@geovigil.com</p>
+                                </div>
+                            </div>
+                            <a href="{{ url_for('worker_approval') }}" class="dropdown-item">Worker Approval</a>
+                            <a href="{{ url_for('settings') }}" class="dropdown-item">Settings</a>
+                            <div class="dropdown-divider"></div>
+                            <a href="{{ url_for('logout') }}" class="dropdown-item logout">Logout</a>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="dashboard-grid">
+                <div id="site-alert-banner" class="system-alert-banner hidden">
+                    ⚠️ ATTENTION: Critical data error detected! Status is NOT fully ONLINE.
+                </div>
+                
+                <div id="rockfall-alert-panel" class="card-alert alert-green">
+                    <span class="alert-icon">✅</span>
+                    <span id="alert-status-text">STATUS: Monitoring. All systems nominal. Latest forecast: Low Risk (3% Probability).</span>
+                </div>
+                
+                <div class="card card-map">
+                    <div class="card-header">
+                        <span class="card-title">Real-Time Rockfall Risk Map</span> <div class="card-actions">
+                            <span class="status">Live</span>
+                            <span class="icon-more">...</span>
+                        </div>
+                    </div>
+                    <div class="card-content card-content-map">
+                        <img src="{{ url_for('static', filename='heatmap.png') }}" alt="Map View" class="map-image">
+                        <div class="map-legend">
+                            <span class="legend-item low">Low Risk</span>
+                            <span class="legend-item risk">Moderate Risk</span>
+                            <span class="legend-item high">High Risk</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card card-graph">
+                    <div class="card-header">
+                        <span class="card-title">Probability-Based Forecast & Trend</span> <div class="card-actions">
+                            <span class="status">Risk</span>
+                            <span class="icon-more">...</span>
+                        </div>
+                    </div>
+                    <div class="card-content card-content-graph">
+                        <p style="font-size: 1.5rem; font-weight: 600; text-align: center; margin-bottom: 10px;">Highest Forecast: 45% (Sector 4B)</p>
+                        <canvas id="riskTrendGraph"></canvas> </div>
+                </div>
+
+                <div class="card card-large-processing">
+                    <div class="card-header">
+                        <span class="card-title">Environmental Trigger Overview</span> <div class="card-actions">
+                            <span class="status">Real Time</span>
+                        </div>
+                    </div>
+                    <div class="card-content">
+                        <ul class="processing-list">
+                            <li><span class="dot dot-green"></span> Rainfall (24hr) <span class="value">0.5 mm</span></li> 
+                            <li><span class="dot dot-yellow"></span> Blasting Records <span class="value">Last Blast 2 hrs ago</span></li> 
+                            <li><span class="dot dot-green"></span> Biogenic <span class="value">N/A</span></li>
+                            <li><span class="dot dot-red"></span> Weathering/Temperature <span class="value">Freeze-Thaw Risk: HIGH</span></li> 
+                            <li><span class="dot dot-red" id="seismic-activity-dot"></span> Seismic Activity (High Freq. >10 Hz): <span class="value" id="seismic-activity-level">ELEVATED</span></li>
+                            <li><span class="dot dot-yellow"></span> Max Frequency Amplitude (>10 Hz): <span class="value" id="max-freq-amplitude">1.2e-5 V</span></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="card card-live-sensor">
+                    <div class="card-header">
+                        <span class="card-title">Geotechnical Monitoring Overview</span> </div>
+                    
+                    <div class="card-content sensor-grid">
+                        <div class="sensor-item card-yellow"> 
+                            <span class="sensor-title">Displacement (mm/day)</span>
+                            <span class="sensor-value" data-sensor="displacement">4.2</span>
+                            <span class="sensor-unit">Tiltemer 2023</span>
+                        </div>
+                        <div class="sensor-item card-green">
+                            <span class="sensor-title">Vibration (RMS)</span>
+                            <span class="sensor-value" data-sensor="vibration">15.189</span>
+                            <span class="sensor-unit">DXDDP 124231S</span>
+                        </div>
+                        <div class="sensor-item card-red"> <span class="sensor-title">Pore Pressure (kPa)</span>
+                            <span class="sensor-value" data-sensor="pore_pressure">18.40</span>
+                            <span class="sensor-unit">Piezometer P10</span>
+                        </div>
+                        <div class="sensor-item">
+                            <span class="sensor-title">Strain (µε)</span>
+                            <span class="sensor-value" data-sensor="strain">27.927</span>
+                            <span class="sensor-unit">Strain Gauge S01</span>
+                        </div>
+                        <div class="sensor-item card-green">
+                            <span class="sensor-title">GPS (Vector)</span>
+                            <span class="sensor-value" data-sensor="gps">4.16.3</span>
+                            <span class="sensor-unit">GPS T-05</span>
+                        </div>
+                        <div class="sensor-item">
+                            <span class="sensor-title">Acoustic Emission</span>
+                            <span class="sensor-value" data-sensor="acoustic_emission">12.20</span>
+                            <span class="sensor-unit">AE-System A-01</span>
+                        </div>
+                    </div>
+                    
+                </div>
+
+              
+    </div>
+    <div class="card-content card-seismic-charts">
+        <div class="chart-container">
+            
+            <canvas id="seismicTimeSeriesGraph"></canvas>
+        </div>
+        <div class="chart-container">
+            
+            <canvas id="seismicFrequencyGraph"></canvas>
+        </div>
+    
+</div>
+                
+                <div class="card card-realtime-data">
+                    <div class="card-header">
+                        <span class="card-title">Data Ingestion Status</span> </div>
+                    <div class="card-content">
+                        <div class="data-feed-grid">
+                            <div class="data-feed-item">
+                                <div class="feed-image-container">
+                                    <img src="{{ url_for('static', filename='satellelite.jpg') }}" alt="DEM/Satellite Data">
+                                    <div class="icon-overlay icon-green">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><circle cx="12" cy="12" r="10"></circle><path d="M10 15l-3-3l3-3M14 9l3 3l-3 3"></path></svg>
+                                    </div>
+                                </div>
+                                <span class="feed-title">DEM/Structure</span>
+                                <span class="feed-value">3.38 GB</span>
+                                <span class="feed-label">Status: ONLINE (Last update: 24h)</span>
+                            </div>
+
+                            <div class="data-feed-item lagging-data-feed card lagging-state">
+                                <div class="feed-image-container">
+                                    <img src="{{ url_for('static', filename='drone.jpg') }}" alt="Drone Imagery">
+                                    <div class="icon-overlay icon-yellow">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><path d="M10 15l-3-3l3-3M14 9l3 3l-3 3"></path><path d="M12 2A10 10 0 0 0 2 12c0 1.54.45 2.97 1.25 4.19l-1.07 1.07a1 1 0 0 0 0 1.41l1.41 1.41a1 1 0 0 0 1.41 0l1.07-1.07A10 10 0 0 0 22 12 10 10 0 0 0 12 2z"></path></svg>
+                                    </div>
+                                </div>
+                                <span class="feed-title">Drone Imagery</span>
+                                <span class="feed-value">2.91 GB</span>
+                                <span class="feed-label">Status: LAGGING (Last update: 6h)</span>
+                                <div class="feed-actions">
+                                    <button onclick="launchUploadModal()">Manual Upload</button>
+                                </div>
+                            </div>
+
+                            <div class="data-feed-item">
+                                <div class="feed-image-container">
+                                    <img src="{{ url_for('static', filename='dronesrvey.png') }}" alt="Geotechnical Data">
+                                    <div class="icon-overlay icon-green">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><path d="M10 15l-3-3l3-3M14 9l3 3l-3 3"></path><path d="M12 2A10 10 0 0 0 2 12c0 1.54.45 2.97 1.25 4.19l-1.07 1.07a1 1 0 0 0 0 1.41l1.41 1.41a1 1 0 0 0 1.41 0l1.07-1.07A10 10 0 0 0 22 12 10 10 0 0 0 12 2z"></path></svg>
+                                    </div>
+                                </div>
+                                <span class="feed-title">Geotechnical Sensors</span>
+                                <span class="feed-value">3.46 GB</span>
+                                <span class="feed-label">Status: ONLINE (Real-Time)</span>
+                            </div>
+
+                            <div class="data-feed-item error-data-feed card error-state">
+                                <div class="feed-image-container">
+                                    <img src="{{ url_for('static', filename='fieldreport.jpg') }}" alt="Environmental Data">
+                                    <div class="icon-overlay icon-red">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><path d="M10 15l-3-3l3-3M14 9l3 3l-3 3"></path><path d="M12 2A10 10 0 0 0 2 12c0 1.54.45 2.97 1.25 4.19l-1.07 1.07a1 1 0 0 0 0 1.41l1.41 1.41a1 1 0 0 0 1.41 0l1.07-1.07A10 10 0 0 0 22 12 10 10 0 0 0 12 2z"></path></svg>
+                                    </div>
+                                </div>
+                                <span class="feed-title">Environmental Data</span>
+                                <span class="feed-value">1.56 MB</span>
+                                <span class="feed-label" id="env-status">Status: ERROR (Weather Station Offline)</span>
+                                <div class="feed-actions">
+                                    <button onclick="troubleshootSensor('env')">Troubleshoot</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card card-management">
+                    <div class="card-header">
+                        <span class="card-title">ML Model Management</span> <div class="card-actions">
+                            <span class="status">View</span>
+                            <span class="icon-more">...</span>
+                        </div>
+                    </div>
+                    <div class="card-content">
+                        <table class="management-table">
+                            <thead>
+                                <tr>
+                                    <th>Model Name</th>
+                                    <th>Status</th>
+                                    <th>Accuracy / F1</th> <th>Latency (ms)</th>
+                                    <th>Last Run Time</th> </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Rockfall Predictor v3.1</td> 
+                                    <td>**ONLINE**</td>
+                                    <td>**92%**</td> <td>250</td>
+                                    <td>1 min ago</td> </tr>
+                                <tr>
+                                    <td colspan="5" style="text-align: center; border: none; padding-top: 15px;">
+                                        <button class="btn-primary" onclick="retrainModel('v3.1')">Retrain Model</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Drone Image Classifier</td>
+                                    <td>**ONLINE**</td>
+                                    <td>88%</td>
+                                    <td>110</td>
+                                    <td>3 hrs ago</td>
+                                </tr>
+                                <tr>
+                                    <td>Historical Trend Analyser</td>
+                                    <td>**ONLINE**</td>
+                                    <td>N/A</td>
+                                    <td>5.5</td>
+                                    <td>Yesterday</td>
+                                </tr>
+                                <tr>
+                                    <td>*Unused Model (Removed)*</td> <td>*N/A*</td>
+                                    <td>*N/A*</td>
+                                    <td>*N/A*</td>
+                                    <td>*N/A*</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <div class="card card-comploy">
+                    <div class="card-header">
+                        <span class="card-title">Deploy Ready</span>
+                    </div>
+                    <div class="card-content">
+                        <p>Rockfall ML API v3.1</p> 
+                        <p>SMS Alert Connector</p> 
+                        
+                        <p style="font-size: 0.9rem; margin-top: 10px; color: #555;">Current Alert Threshold: P(Rockfall) > 0.75</p>
+                        <button class="btn-primary" onclick="openAlertConfig()">Alert Configuration</button>
+                        
+                        <button class="btn-secondary" onclick="sendTestAlert()">Send Test Alert</button>
+
+                    </div>
+                </div>
+
+                <div class="card card-weather">
+                    <div class="card-header">
+                        <span class="card-title">Weather (Environmental Factors)</span> </div>
+                    <div class="card-content">
+                        <div class="weather-display">
+                            <div class="weather-icon-placeholder"></div>
+                            <h3 id="location">Mine Site, North America</h3>
+                            <div class="weather-details">
+                                <h1 id="temperature">34°C</h1>
+                                <p id="description">Heavy Rainfall Expected</p> </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="sticky-note">
+    <strong>MVP Presentation Notice:</strong>
+    This dashboard is under active development. Live data streams and ML model training are currently in simulation mode.
+</div>
+
+<audio id="alert-sound" src="{{ url_for('static', filename='audio/alarm.wav') }}" preload="auto"></audio>
+
+<div id="upload-modal" class="modal-overlay hidden">
+    </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="upload-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h3>Manual Drone Image Upload</h3>
+            <p>Select a file to manually ingest recent drone imagery to resolve the data lag.</p>
+            <form>
+                <input type="file" id="drone-file" accept=".zip,.tar,.jpg,.tiff" required>
+                <button type="submit" class="btn-primary">Upload & Process</button>
+                <button type="button" class="btn-secondary" onclick="closeUploadModal()">Cancel</button>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        // --- LIVE DATA & UI UPDATE LOGIC ---
+        function updateDashboardData() {
+            
+            fetch('/api/live_data')
+                .then(response => response.json())
+                .then(data => {
+                    // 1. Update Alert Banner (Risk Status)
+                    const alertPanel = document.getElementById('rockfall-alert-panel');
+                    const statusTextEl = document.getElementById('alert-status-text');
+                    
+                    statusTextEl.textContent = `STATUS: Monitoring. Latest forecast: ${data.risk_status} (${data.risk_probability}% Probability).`;
+                    
+                    alertPanel.classList.remove('alert-green', 'alert-yellow', 'alert-red'); 
+                    if (data.risk_status.includes('Low')) {
+                        alertPanel.classList.add('alert-green');
+                    } else if (data.risk_status.includes('Moderate')) {
+                        alertPanel.classList.add('alert-yellow');
+                    } else if (data.risk_status.includes('High')) {
+                        alertPanel.classList.add('alert-red');
+                    }
+
+                    // 2. Update Geotechnical Monitoring Overview (Sensors)
+                    document.querySelector('[data-sensor="displacement"]').textContent = data.displacement;
+                    document.querySelector('[data-sensor="vibration"]').textContent = data.vibration;
+                    document.querySelector('[data-sensor="pore_pressure"]').textContent = data.pore_pressure;
+                    document.querySelector('[data-sensor="strain"]').textContent = data.strain;
+                    document.querySelector('[data-sensor="gps"]').textContent = `${data.gps_x}.${data.gps_y}`;
+                    document.querySelector('[data-sensor="acoustic_emission"]').textContent = data.acoustic_emission;
+                    
+                    // 3. Update the Highest Forecast text 
+                    document.querySelector('.card-content-graph p').textContent = `Highest Forecast: ${data.risk_probability}% (Sector 4B)`;
+                    
+                    // 4. Site-wide Alert Check
+                    const isCriticalError = document.querySelector('.error-data-feed') || document.querySelector('.lagging-data-feed');
+                    const siteAlertBanner = document.getElementById('site-alert-banner');
+
+                    if (isCriticalError) {
+                        siteAlertBanner.classList.remove('hidden');
+                    } else {
+                        siteAlertBanner.classList.add('hidden');
+                    }
+
+                    // 5. Update Environmental Trigger Overview with NEW Seismic Data
+                    const seismicDot = document.getElementById('seismic-activity-dot');
+                    const seismicLevel = document.getElementById('seismic-activity-level');
+                    const maxFreqAmp = document.getElementById('max-freq-amplitude');
+
+                    seismicLevel.textContent = data.seismic_activity_level;
+                    maxFreqAmp.textContent = `${data.max_freq_amplitude} V`;
+
+                    seismicDot.classList.remove('dot-green', 'dot-yellow', 'dot-red');
+                    if (data.seismic_activity_level === 'NORMAL') {
+                        seismicDot.classList.add('dot-green');
+                    } else if (data.seismic_activity_level === 'ELEVATED') {
+                        seismicDot.classList.add('dot-yellow');
+                    } else if (data.seismic_activity_level === 'HIGH') {
+                        seismicDot.classList.add('dot-red');
+                    }
+
+                })
+                .catch(error => console.error('Error fetching live data:', error));
+        }
+
+        // --- CHART INITIALIZATION & UPDATE FUNCTIONS ---
+        // Global chart instances
+        let seismicTimeSeriesChart;
+        let seismicFrequencyChart;
+
+        function initializeCharts() {
+            // Seismic Time-Series Graph
+            const tsCtx = document.getElementById('seismicTimeSeriesGraph').getContext('2d');
+            seismicTimeSeriesChart = new Chart(tsCtx, {
+                type: 'line',
+                data: {
+                    labels: [], 
+                    datasets: [{
+                        label: 'Ground Acceleration (V)',
+                        data: [], 
+                        borderColor: '#007bff',
+                        backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                        fill: true,
+                        tension: 0.1,
+                        pointRadius: 0 
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            type: 'category',
+                            title: {
+                                display: true,
+                                text: 'Time (Last Hour)'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Amplitude (V)'
+                            }
+                        }
+                    },
+                    animation: {
+                        duration: 0 
+                    }
+                }
+            });
+
+            // Seismic Frequency Spectrum Graph
+            const freqCtx = document.getElementById('seismicFrequencyGraph').getContext('2d');
+            seismicFrequencyChart = new Chart(freqCtx, {
+                type: 'line', 
+                data: {
+                    labels: [], 
+                    datasets: [{
+                        label: 'Amplitude (V)',
+                        data: [], 
+                        borderColor: '#dc3545', 
+                        backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                        borderWidth: 2,
+                        fill: false, 
+                        pointRadius: 1,
+                        tension: 0.3 
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            type: 'category', 
+                            title: {
+                                display: true,
+                                text: 'Frequency (Hz)'
+                            }
+                        },
+                        y: {
+                            type: 'logarithmic', 
+                            title: {
+                                display: true,
+                                text: 'Amplitude (Log V)'
+                            }
+                        }
+                    },
+                    animation: {
+                        duration: 0 
+                    },
+                    elements: {
+                        line: {
+                            borderJoinStyle: 'round'
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateSeismicCharts() {
+            fetch('/api/seismic_data')
+                .then(response => response.json())
+                .then(data => {
+                    // Update Time-Series Chart
+                    seismicTimeSeriesChart.data.labels = data.time_series.map(d => d.time);
+                    seismicTimeSeriesChart.data.datasets[0].data = data.time_series.map(d => d.amplitude);
+                    seismicTimeSeriesChart.update();
+
+                    // Update Frequency Spectrum Chart
+                    seismicFrequencyChart.data.labels = data.frequency_spectrum.map(d => `${d.frequency} Hz`);
+                    seismicFrequencyChart.data.datasets[0].data = data.frequency_spectrum.map(d => parseFloat(d.amplitude));
+                    seismicFrequencyChart.update();
+                })
+                .catch(error => console.error('Error fetching seismic data:', error));
+        }
+
+        // --- UI Action Handlers (Kept for completeness) ---
+        
+        function troubleshootSensor(sensorId) {
+            const statusEl = document.getElementById('env-status');
+            statusEl.textContent = 'Status: Pinging...';
+            
+            setTimeout(() => {
+                const results = ['Authentication Failed', 'No IP Address', 'Status: ONLINE (Fixed!)'];
+                const randomResult = results[Math.floor(Math.random() * results.length)];
+                
+                if (randomResult.includes('ONLINE')) {
+                    alert('Troubleshooting successful! Data feed is restored.');
+                    statusEl.textContent = randomResult;
+                } else {
+                    alert(`Troubleshooting failed: ${randomResult}. Requires manual intervention.`);
+                    statusEl.textContent = `Status: ERROR (${randomResult})`;
+                }
+            }, 2000);
+        }
+
+        function launchUploadModal() {
+            document.getElementById('upload-modal').classList.remove('hidden');
+        }
+
+        function closeUploadModal() {
+            document.getElementById('upload-modal').classList.add('hidden');
+        }
+
+        function retrainModel(version) {
+            if (confirm(`Are you sure you want to RE-TRAIN the Rockfall Predictor ${version}? This will take ~30 minutes.`)) {
+                alert(`Retraining process for ${version} initiated successfully. Monitor the Logs.`);
+            }
+        }
+        
+        function openAlertConfig() {
+            alert('Opening a new window/modal for detailed Alert Configuration... (Simulated)');
+        }
+        
+        function sendTestAlert() {
+            if (confirm("Confirm sending a test SMS/Email alert to the admin contacts?")) {
+                alert("Test notification sent! Please check your mobile phone/inbox for confirmation.");
+            }
+        }
+
+        // --- Initial Load & Interval Setup ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const avatarBtn = document.getElementById('user-avatar-btn');
+            const dropdownMenu = document.getElementById('user-dropdown');
+            
+            avatarBtn.addEventListener('click', (event) => {
+                dropdownMenu.classList.toggle('hidden');
+                event.stopPropagation(); 
+            });
+
+            document.addEventListener('click', (event) => {
+                if (!dropdownMenu.classList.contains('hidden') && !dropdownMenu.contains(event.target) && event.target !== avatarBtn) {
+                    dropdownMenu.classList.add('hidden');
+                }
+            });
+
+            // Initialize all charts
+            initializeCharts();
+
+            // Initial data load and periodic refresh
+            updateDashboardData();
+            updateSeismicCharts(); 
+
+            setInterval(updateDashboardData, 10000); // For general dashboard data
+            setInterval(updateSeismicCharts, 5000); // More frequent update for seismic charts
+        });
+    </script>
+</body>
+</html>
