@@ -4,20 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GEO VIGIL Registration</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="static/css/style.css">
 </head>
 <body>
     <div class="container">
         <h2>GEO VIGIL Registration</h2>
         <p>Please select your user type:</p>
         <div class="user-type-selection">
-            <a href="{{ url_for('user_registration') }}" target="_blank">
-    <button>On-site User</button>
-</a>
+            
+            <a href="user_registration.html" target="_blank">
+                <button>On-site User</button>
+            </a>
 
-<a href="{{ url_for('supervisor_registration') }}" target="_blank">
-    <button>Supervisor</button>
-</a>
+            <a href="supervisor_registration.html" target="_blank">
+                <button>Supervisor</button>
+            </a>
 
         </div>
     </div>
