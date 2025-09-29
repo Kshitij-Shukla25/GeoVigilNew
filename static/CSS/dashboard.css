@@ -1,0 +1,861 @@
+/* Import Google Fonts - Inter is a good match for the clean UI */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+    --bg-dark: #121212; /* Very dark background */
+    --card-bg: #1e1e1e; /* Slightly lighter for cards */
+    --sidebar-bg: #1a1a1a; /* Sidebar background */
+    --text-primary: #e0e0e0; /* Light grey text */
+    --text-secondary: #9e9e9e; /* Muted grey text */
+    --accent-blue: #007bff; /* General accent blue */
+    --accent-green: #28a745; /* Green for positive status */
+    --accent-orange: #ffc107; /* Orange for warning/risk */
+    --border-color: #333; /* Subtle border color */
+    --header-height: 60px;
+    --sidebar-width: 250px;
+    --border-radius-card: 12px;
+    --padding-card: 20px;
+    --grid-gap: 20px;
+}
+
+/* Base Styles & Global Reset */
+body, html {
+    margin: 0;
+    padding: 0;
+    overflow: hidden; /* Prevents scrolling */
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bg-dark);
+    color: var(--text-primary);
+    height: 100%;
+}
+
+* {
+    box-sizing: border-box; /* Include padding and border in element's total width and height */
+}
+
+/* Dashboard Container */
+.dashboard-container {
+    display: flex;
+    height: 100vh; /* Full viewport height */
+    width: 100vw; /* Full viewport width */
+}
+
+/* Sidebar */
+.sidebar {
+    width: var(--sidebar-width);
+    background-color: var(--sidebar-bg);
+    padding: var(--padding-card) 0;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid var(--border-color);
+    flex-shrink: 0; /* Prevent sidebar from shrinking */
+    overflow-y: auto; /* Allow sidebar to scroll if content overflows */
+}
+
+.sidebar-header {
+    display: flex;
+    align-items: center;
+    padding: 0 var(--padding-card) var(--padding-card);
+    margin-bottom: 20px;
+    color: #fff;
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.sidebar-header .logo {
+    width: 30px;
+    height: 30px;
+    margin-right: 10px;
+    border-radius: 6px;
+}
+
+.sidebar-nav ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    padding: 12px var(--padding-card);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+    font-size: 0.95rem;
+}
+
+.nav-item:hover, .nav-item.active {
+    background-color: #2a2a2a; /* Slightly lighter on hover/active */
+    color: var(--text-primary);
+    border-left: 3px solid var(--accent-blue); /* Visual active indicator */
+    padding-left: calc(var(--padding-card) - 3px); /* Adjust padding due to border */
+}
+
+.nav-item .nav-icon {
+    width: 20px;
+    height: 20px;
+    margin-right: 12px;
+    color: var(--text-secondary); /* Default icon color */
+}
+
+.nav-item.active .nav-icon {
+    color: var(--accent-blue); /* Active icon color */
+}
+
+.sidebar-section {
+    margin-top: 30px;
+    border-top: 1px solid var(--border-color);
+    padding-top: 20px;
+}
+
+.sidebar-section-title {
+    display: flex;
+    align-items: center;
+    padding: 0 var(--padding-card) 10px;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    font-weight: 500;
+}
+.sidebar-section-title .nav-icon { /* Reusing nav-icon for section titles */
+    margin-right: 8px;
+    width: 18px;
+    height: 18px;
+    color: var(--text-secondary);
+}
+
+
+/* Main Content Area */
+.main-content {
+    flex-grow: 1; /* Takes up remaining space */
+    display: flex;
+    flex-direction: column;
+    padding: 0 var(--padding-card) var(--padding-card); /* Top padding handled by header */
+    overflow-y: auto; /* Allow main content to scroll if needed */
+}
+
+/* Main Header */
+.main-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: var(--header-height);
+    background-color: var(--bg-dark); /* Match body background */
+    padding: 0; /* Already has padding from main-content */
+    position: sticky; /* Make header sticky */
+    top: 0;
+    z-index: 1000; /* Ensure it stays on top */
+}
+
+.main-tabs {
+    display: flex;
+    margin-bottom: -1px; /* Overlap border with content */
+}
+
+.tab-item {
+    padding: 10px 15px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s;
+    border-bottom: 2px solid transparent;
+    margin-right: 10px;
+}
+
+.tab-item:hover {
+    color: var(--text-primary);
+}
+
+.tab-item.active {
+    color: var(--text-primary);
+    border-bottom-color: var(--accent-blue);
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+}
+
+.search-input {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 8px 15px;
+    color: var(--text-primary);
+    margin-right: 15px;
+    font-size: 0.9rem;
+    width: 180px; /* Adjust as needed */
+}
+
+.search-input::placeholder {
+    color: var(--text-secondary);
+}
+
+.icon-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-secondary);
+    margin-right: 15px;
+    padding: 5px;
+}
+
+.icon-button svg {
+    width: 20px;
+    height: 20px;
+}
+
+.user-avatar {
+    width: 32px;
+    height: 32px;
+    background-color: #6c757d; /* Placeholder grey */
+    border-radius: 50%;
+    margin-left: 10px;
+}
+
+/* Dashboard Grid Layout */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* 3 columns by default */
+    grid-template-rows: auto auto auto; /* Auto rows */
+    gap: var(--grid-gap);
+    padding-top: var(--grid-gap); /* Space below header */
+}
+
+/* Specific Grid Areas */
+.card-map {
+    grid-column: span 1; /* Occupies 1 column */
+}
+
+.card-graph {
+    grid-column: span 1; /* Occupies 1 column */
+}
+
+.card-large-processing {
+    grid-column: span 1; /* Occupies 1 column */
+}
+
+.card-live-sensor {
+    grid-column: span 2; /* Occupies 2 columns */
+}
+
+.card-realtime-data {
+    grid-column: span 2; /* Occupies 2 columns */
+}
+
+.card-management {
+    grid-column: span 1; /* Occupies 1 column */
+}
+
+/* Card Styling */
+.card {
+    background-color: var(--card-bg);
+    border-radius: var(--border-radius-card);
+    padding: var(--padding-card);
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.card-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.card-actions {
+    display: flex;
+    align-items: center;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.card-actions .status {
+    background-color: #333;
+    padding: 4px 8px;
+    border-radius: 5px;
+    margin-right: 10px;
+}
+
+.card-actions .icon-more {
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 1.2rem;
+}
+
+.card-content {
+    flex-grow: 1;
+}
+
+/* Specific Card Styles */
+.card-map .map-image {
+    width: 100%;
+    height: auto;
+    border-radius: 8px;
+    margin-bottom: 10px;
+}
+
+.card-map .map-legend {
+    display: flex;
+    justify-content: space-around;
+    padding-top: 10px;
+    border-top: 1px solid var(--border-color);
+}
+
+.map-legend .legend-item {
+    font-size: 0.8rem;
+    padding: 5px 10px;
+    border-radius: 5px;
+    color: #fff;
+}
+
+.map-legend .low { background-color: #007bff; } /* Example blue */
+.map-legend .risk { background-color: #ffc107; } /* Example orange */
+.map-legend .high { background-color: #dc3545; } /* Example red */
+
+
+.card-graph .graph-image {
+    width: 100%;
+    height: 150px; /* Adjust height for graphs */
+    object-fit: contain; /* Ensure image fits */
+    border-radius: 8px;
+}
+
+.card-large-processing .processing-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.card-large-processing .processing-list li {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+    font-size: 0.95rem;
+}
+
+.card-large-processing .processing-list .dot {
+    width: 8px;
+    height: 8px;
+    background-color: var(--accent-blue); /* Example color */
+    border-radius: 50%;
+    margin-right: 10px;
+    flex-shrink: 0;
+}
+.card-large-processing .processing-list li:nth-child(2) .dot { background-color: #6f42c1; } /* Example purple */
+.card-large-processing .processing-list li:nth-child(3) .dot { background-color: #fd7e14; } /* Example yellow-orange */
+
+
+.sensor-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--grid-gap);
+}
+
+.sensor-item {
+    background-color: #2a2a2a; /* Slightly lighter than card bg */
+    border-radius: var(--border-radius-card);
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 100px;
+}
+
+.sensor-item.card-green {
+    background-color: var(--accent-green); /* Green background */
+    color: #fff;
+}
+
+.sensor-item .sensor-title {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-bottom: 5px;
+}
+.sensor-item.card-green .sensor-title { color: rgba(255,255,255,0.7); }
+
+.sensor-item .sensor-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+.sensor-item.card-green .sensor-value { color: #fff; }
+
+.sensor-item .sensor-unit {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-top: 5px;
+}
+.sensor-item.card-green .sensor-unit { color: rgba(255,255,255,0.6); }
+
+/* Comploy Ready Card (nested in sensor-grid for placement) */
+.card-comploy {
+    grid-column: span 3; /* Occupies full width of sensor-grid */
+    background-color: var(--card-bg); /* Reset background as it's a sub-card */
+    padding: var(--padding-card);
+    border-radius: var(--border-radius-card);
+    display: flex;
+    flex-direction: column;
+}
+
+.card-comploy .card-header {
+    margin-bottom: 10px;
+}
+
+.card-comploy p {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-bottom: 5px;
+}
+
+.card-comploy .btn-primary {
+    background-color: var(--accent-blue);
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    margin-top: 10px;
+    align-self: flex-start; /* Align button to start */
+}
+
+
+.card-realtime-data .data-items {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid var(--border-color);
+}
+
+.card-realtime-data .data-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.card-realtime-data .data-label {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-bottom: 5px;
+}
+
+.card-realtime-data .data-value {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 3px;
+}
+
+.card-realtime-data .data-unit {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+}
+
+.management-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.management-table th, .management-table td {
+    padding: 10px 0;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.management-table th {
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.management-table td {
+    color: var(--text-primary);
+}
+
+.management-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Utility classes for placeholder images */
+img {
+    max-width: 100%;
+    height: auto;
+    display: block; /* Remove extra space below images */
+}
+
+/* Simple placeholder for the small chart in sensor-item */
+.chart-small {
+    width: 100%;
+    height: 40px; /* Adjust height as needed */
+    background: linear-gradient(to right, #404040, #505050); /* Simple gradient */
+    border-radius: 4px;
+    margin-top: 8px;
+}
+
+/* Responsive adjustments (basic) */
+@media (max-width: 1200px) {
+    .dashboard-grid {
+        grid-template-columns: repeat(2, 1fr); /* 2 columns on smaller screens */
+    }
+    .card-large-processing {
+        grid-column: span 1;
+    }
+    .card-live-sensor, .card-realtime-data {
+        grid-column: span 2; /* Still span 2 */
+    }
+}
+
+@media (max-width: 768px) {
+    .dashboard-container {
+        flex-direction: column; /* Stack sidebar and main content */
+    }
+    .sidebar {
+        width: 100%;
+        height: auto;
+        padding-bottom: 0;
+        border-right: none;
+        border-bottom: 1px solid var(--border-color);
+        overflow-y: visible; /* Allow content to push sidebar down */
+    }
+    .sidebar-nav ul, .sidebar-section {
+        display: flex; /* Make nav items horizontal */
+        flex-wrap: wrap;
+        justify-content: center;
+        border-top: none;
+        padding-top: 0;
+    }
+    .nav-item {
+        padding: 8px 12px;
+        border-left: none !important; /* Remove sidebar active border */
+        border-bottom: 2px solid transparent;
+        margin: 0 5px;
+    }
+    .nav-item.active {
+        border-bottom-color: var(--accent-blue) !important;
+    }
+
+    .main-content {
+        padding: 0 15px 15px;
+    }
+    .main-header {
+        flex-direction: column;
+        align-items: flex-start;
+        height: auto;
+        padding: 15px 0;
+        position: static; /* No longer sticky on small screens */
+    }
+    .main-tabs {
+        margin-bottom: 15px;
+        width: 100%;
+        justify-content: space-around;
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 10px;
+    }
+    .header-actions {
+        width: 100%;
+        justify-content: space-between;
+        margin-top: 10px;
+    }
+    .search-input {
+        flex-grow: 1;
+        margin-right: 10px;
+        width: auto;
+    }
+    .dashboard-grid {
+        grid-template-columns: 1fr; /* Single column on very small screens */
+        padding-top: 15px;
+    }
+    .card-map, .card-graph, .card-large-processing, .card-live-sensor, .card-realtime-data, .card-management {
+        grid-column: span 1;
+    }
+    .sensor-grid {
+        grid-template-columns: repeat(2, 1fr); /* 2 columns for sensors on small screens */
+    }
+    .card-comploy {
+        grid-column: span 2;
+    }
+    .sidebar-section-title {
+        display: none; /* Hide section titles on small screens if space is tight */
+    }
+}
+/* Container for the entire data feed section */
+.card-data-feed {
+    background-color: var(--card-bg);
+    border-radius: var(--border-radius-card);
+    padding: var(--padding-card);
+}
+
+/* Grid layout for the items */
+.data-feed-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr); /* 4 equal columns */
+    gap: 20px;
+    justify-items: center; /* Center items horizontally */
+    text-align: center;
+}
+
+/* Individual data feed item */
+.data-feed-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%; /* Ensure it fills its grid cell */
+}
+
+/* Image container to manage overlay icon */
+.feed-image-container {
+    position: relative;
+    width: 100%;
+    height: 0;
+    padding-bottom: 100%; /* Creates a square aspect ratio */
+    overflow: hidden;
+    border-radius: 12px;
+    margin-bottom: 15px;
+}
+
+.feed-image-container img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Ensures the image fills the container */
+}
+
+/* Icon overlay */
+.icon-overlay {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: rgba(0, 0, 0, 0.4);
+    border-radius: 50%;
+    padding: 6px;
+    color: white;
+}
+
+.icon-overlay svg {
+    width: 16px;
+    height: 16px;
+}
+
+/* Text styles */
+.feed-title {
+    font-size: 1rem;
+    color: var(--text-primary);
+    margin-bottom: 5px;
+}
+
+.feed-value {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1; /* Adjust line height for better spacing */
+}
+
+.feed-label {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-top: 5px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .data-feed-grid {
+        grid-template-columns: repeat(2, 1fr); /* 2 columns on smaller screens */
+        gap: 15px;
+    }
+}
+
+@media (max-width: 480px) {
+    .data-feed-grid {
+        grid-template-columns: 1fr; /* Stack on very small screens */
+    }
+}
+.card-weather {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    background-color: rgb(147, 216, 232);
+    font-size: 1rem;
+   
+}
+
+.weather-display {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    color: rgb(217, 219, 91);
+}
+
+.weather-icon-placeholder {
+    width: 100px;
+    height: 100px;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    margin-bottom: 10px;
+    background-image: url('/static/drone.png'); /* Placeholder image */
+}
+
+#location {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 5px;
+    color: var(--text-primary);
+    color: rgb(4, 49, 5);
+    font-weight: bolder;
+}
+
+.weather-details {
+    margin-top: 10px;
+}
+
+#temperature {
+    font-size: 3rem;
+    font-weight: 700;
+    color: rgb(0, 0, 0);
+    margin-bottom: 5px;
+}
+
+#description {
+    font-size: 1rem;
+    text-transform: capitalize;
+    color: black;
+    font-weight: 600;
+
+}
+.card-full-weather {
+    grid-column: span 3; /* This card will span all 3 columns of the grid */
+    padding: 30px;
+}
+
+.weather-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.current-weather {
+    display: flex;
+    align-items: center;
+}
+
+.weather-icon-lg {
+    width: 80px;
+    height: 80px;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+.current-temp {
+    font-size: 3.5rem;
+    font-weight: 700;
+    margin-left: 10px;
+    line-height: 1;
+}
+
+.unit {
+    font-size: 1.5rem;
+    color: var(--text-secondary);
+}
+
+.current-details {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-left: 20px;
+}
+
+.weather-location h3 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.weather-location p {
+    margin: 5px 0 0;
+    color: var(--text-secondary);
+}
+
+.weather-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 20px;
+}
+
+.weather-tabs .tab-item {
+    padding: 10px 20px;
+    cursor: pointer;
+    color: var(--text-secondary);
+    transition: color 0.2s;
+}
+
+.weather-tabs .tab-item.active {
+    color: rgb(220, 34, 34);
+    border-bottom: 2px solid var(--accent-blue);
+    margin-bottom: -1px;
+}
+
+.weather-graph-container {
+    width: 100%;
+    height: 180px;
+    margin-bottom: 20px;
+}
+
+.daily-forecast {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid var(--border-color);
+    padding-top: 20px;
+}
+
+.daily-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100px; /* Or use flex-basis */
+    text-align: center;
+}
+
+.daily-item-day {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 5px;
+}
+
+.daily-item-icon {
+    width: 50px;
+    height: 50px;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+.daily-item-temp {
+    font-size: 1rem;
+    font-weight: 700;
+    margin-top: 5px;
+}
+
+.daily-item-temp.min {
+    color: var(--text-secondary);
+    font-weight: 400;
+    font-size: 0.8rem;
+}
